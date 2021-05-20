@@ -256,7 +256,23 @@
                             "sku": {
                                 "name": "[parameters('StorageAccountType')]"
                             },
-                            "kind": "Storage"
+                            "kind": "StorageV2",
+                            "properties": {
+                                "supportsHttpsTrafficOnly": true,
+                                "encryption": {
+                                    "services": {
+                                        "file": { 
+                                            "enabled": true
+                                        },
+                                        "blob": {
+                                            "enabled": true
+                                        }
+                                    },
+                                    "keySource": "Microsoft.Storage"
+                                },
+                                "isHnsEnabled": true,
+                                "accessTier": "Hot"
+                            }
                         },
                         {
                             "apiVersion": "[parameters('platformAccountAPIVersion')]",
