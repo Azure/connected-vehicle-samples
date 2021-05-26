@@ -43,6 +43,13 @@
                 "description": "The name of the function app that you wish to create for MCVP Extensions."
             }
         },
+        "analyticsStorageAccountName": {
+            "type": "string",
+            "defaultValue": "[concat(uniquestring(resourceGroup().id), 'analytics')]",
+            "metadata": {
+                "description": "The name of the analytics storage account."
+            }
+        },
         "mcvpExtensionsStorageAccountType": {
             "type": "string",
             "defaultValue": "Standard_LRS",
@@ -61,9 +68,6 @@
                 "description": "Claims provider uri which is used for platformAccount deployment."
             }
         }
-    },
-    "variables": {
-        "contributorRoleId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c')]"
     },
     "resources": [
         {
@@ -103,7 +107,7 @@
                     "variables": {
                         "mcvpExtensionsFunctionAppName": "[parameters('Name')]",
                         "hostingPlanName": "[parameters('Name')]",
-                        "storageAccountName": "[concat(uniquestring(resourceGroup().id), parameters('Name'))]",
+                        "storageAccountName": "[concat(parameters('Name'), 'sa')]",
                         "functionWorkerRuntime": "dotnet"
                     },
                     "resources": [
@@ -216,6 +220,9 @@
                     },
                     "extensionsResourceId": {
                         "value": "[reference('McvpExtensions').outputs.mcvpextAFId.value]"
+                    },
+                    "analyticsStorageAccountName": {
+                        "value": "[parameters('analyticsStorageAccountName')]"
                     }
                 },
                 "template": {
@@ -242,21 +249,37 @@
                         },
                         "claimsProviderUri": {
                             "type": "string"
+                        },
+                        "analyticsStorageAccountName": {
+                            "type": "string"
                         }
-                    },
-                    "variables": {
-                        "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'analytics')]"
                     },
                     "resources": [
                         {
                             "type": "Microsoft.Storage/storageAccounts",
                             "apiVersion": "2019-06-01",
-                            "name": "[variables('storageAccountName')]",
+                            "name": "[parameters('analyticsStorageAccountName')]",
                             "location": "[parameters('location')]",
                             "sku": {
                                 "name": "[parameters('StorageAccountType')]"
                             },
-                            "kind": "Storage"
+                            "kind": "StorageV2",
+                            "properties": {
+                                "supportsHttpsTrafficOnly": true,
+                                "encryption": {
+                                    "services": {
+                                        "file": { 
+                                            "enabled": true
+                                        },
+                                        "blob": {
+                                            "enabled": true
+                                        }
+                                    },
+                                    "keySource": "Microsoft.Storage"
+                                },
+                                "isHnsEnabled": true,
+                                "accessTier": "Hot"
+                            }
                         },
                         {
                             "apiVersion": "[parameters('platformAccountAPIVersion')]",
@@ -268,7 +291,7 @@
                             },
                             "properties": {
                                 "analytics": {
-                                    "storageAccountResourceId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+                                    "storageAccountResourceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('analyticsStorageAccountName'))]"
                                 },
                                 "extensions": [
                                     {
@@ -283,7 +306,7 @@
                                 "type": "SystemAssigned"
                             },
                             "dependsOn": [
-                                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+                                "[resourceId('Microsoft.Storage/storageAccounts', parameters('analyticsStorageAccountName'))]"
                             ]
                         }
                     ],
@@ -297,17 +320,75 @@
             }
         },
         {
-            "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "2020-04-01-preview",
-            "name": "[guid(concat(parameters('platformAccountName'), parameters('connectedVehicleExtensionsName'), 'contributorRole'))]",
-            "scope": "[concat('Microsoft.Web/sites', '/', parameters('connectedVehicleExtensionsName') )]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "name": "RoleAssignments",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'Mcvp')]",
-                "[resourceId('Microsoft.Resources/deployments', 'McvpExtensions')]"
+                "[resourceId('Microsoft.Resources/deployments', 'McvpExtensions')]",
+                "[resourceId('Microsoft.Resources/deployments', 'Mcvp')]"
             ],
             "properties": {
-                "roleDefinitionId": "[variables('contributorRoleId')]",
-                "principalId": "[reference('Mcvp').outputs.mcvpPrincipalId.value]"
+                "expressionEvaluationOptions": {
+                    "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                    "platformAccountName": {
+                        "value": "[parameters('platformAccountName')]"
+                    },
+                    "connectedVehicleExtensionsName": {
+                        "value": "[parameters('connectedVehicleExtensionsName')]"
+                    },
+                    "analyticsStorageAccountName": {
+                        "value": "[parameters('analyticsStorageAccountName')]"
+                    },
+                    "mcvpPrincipalId": {
+                        "value": "[reference('Mcvp').outputs.mcvpPrincipalId.value]"
+                    }
+                },
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "platformAccountName": {
+                            "type": "string"
+                        },
+                        "connectedVehicleExtensionsName": {
+                            "type": "string"
+                        },
+                        "analyticsStorageAccountName": {
+                            "type": "string"
+                        },
+                        "mcvpPrincipalId": {
+                            "type": "string"
+                        }
+                    },
+                    "variables": {
+                        "contributorRoleId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c')]"
+                    },
+                    "resources": [
+                        {
+                            "type": "Microsoft.Authorization/roleAssignments",
+                            "apiVersion": "2020-04-01-preview",
+                            "name": "[guid(concat(parameters('platformAccountName'), parameters('connectedVehicleExtensionsName'), 'contributorRole'))]",
+                            "scope": "[concat('Microsoft.Web/sites', '/', parameters('connectedVehicleExtensionsName') )]",
+                            "properties": {
+                                "roleDefinitionId": "[variables('contributorRoleId')]",
+                                "principalId": "[parameters('mcvpPrincipalId')]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Authorization/roleAssignments",
+                            "apiVersion": "2020-04-01-preview",
+                            "name": "[guid(concat(parameters('platformAccountName'), parameters('analyticsStorageAccountName'), 'contributorRole'))]",
+                            "scope": "[concat('Microsoft.Storage/storageAccounts/', parameters('analyticsStorageAccountName') )]",
+                            "properties": {
+                                "roleDefinitionId": "[variables('contributorRoleId')]",
+                                "principalId": "[parameters('mcvpPrincipalId')]"
+                            }
+                        }
+                    ]
+                }
             }
         }
     ]
