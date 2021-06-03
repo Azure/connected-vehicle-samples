@@ -7,6 +7,16 @@
   },
   "body": {
   },
+  "claims": [
+    {
+      "name": "Services",
+      "values": [
+        {
+          "value": "TypeA"
+        }
+      ]
+    }
+  ],
   "state": {
     "aux": [],
     "telemetry": [
