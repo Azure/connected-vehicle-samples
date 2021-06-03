@@ -1,0 +1,38 @@
+{
+  "context": {
+    "vehicleId": "myVehicleId",
+    "userId": "myUserId",
+    "deviceId": "myDeviceId",
+    "deviceName": "myDeviceName"
+  },
+  "body": {
+  },
+  "state": {
+    "aux": [],
+    "telemetry": [
+      {
+        "vehicleId": "myVehicleId",
+        "deviceName": "myDeviceName",
+        "telemetryName": "myTelemetryPath",
+        "payload": "Redmond, WA, United States",
+        "time": "2021-04-30T09:34:57.2698502Z",
+        "location": {
+          "latitude": 47.6447887,
+          "longitude": -122.1245881
+        }
+      },
+      {
+        "vehicleId": "myVehicleId",
+        "deviceName": "myDeviceName",
+        "telemetryName": "myTelemetryPath2",
+        "payload": "Seattle, WA, United States",
+        "time": "2021-04-30T10:34:57.2698502Z",
+        "location": {
+          "latitude": 47.6129432,
+          "longitude": -122.4821475
+        }
+      }
+    ],
+    "user": []
+  }
+}
