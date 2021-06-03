@@ -1,0 +1,21 @@
+// Please specify the parameters and options that will be used to execute the extension.
+// You can use Ctrl + Space to trigger suggestions.
+{
+  "context": {
+    "vehicleId": "myVehicleId",
+    "userId": "myUserId",
+    "deviceId": "myDeviceId",
+    "deviceName": "myDeviceName"
+  },
+  "body": {
+    "telemetryName": "myTelemetryPath",
+    "payload": {
+      "SampleKey": "SampleValue"
+    },
+    "time": "2021-04-30T09:34:57.2698502Z",
+    "location": {
+      "latitude": 47.6447887,
+      "longitude": -122.1245881
+    }
+  }
+}
