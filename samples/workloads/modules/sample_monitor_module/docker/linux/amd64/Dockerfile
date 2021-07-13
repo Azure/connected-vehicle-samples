@@ -10,4 +10,5 @@ WORKDIR /scripts
 COPY *.py /scripts/
 
 # Start application
-CMD python SampleMonitor.py
+# Unbuffered mode allows standard print statements to be displayed
+CMD python -u SampleMonitor.py

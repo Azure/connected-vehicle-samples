@@ -1,40 +1,48 @@
 import paho.mqtt.client as mqtt 
 import json
 import time
+import os
+from random import *
 
-# Host name of the local mosquitto broker
-mosquitto_host = "mosquittomodule.azure-iot-edge"
+# Host name of the local mosquitto broker is read from the environment variable MqttBrokerAddress
+mosquitto_host = os.environ.get("MqttBrokerAddress", "localhost")
 
-# Port of the local mosquitto broker
+# Port of the  mosquitto broker.
 mosquitto_port = 1883
 
 
-# Connect to the mosquitto broker
+# Connects to the mosquitto broker
 def connect(clientName):
     client = mqtt.Client(clientName)
     try:
         client.connect(mosquitto_host, mosquitto_port)
     except:
-        print ("Failed to connect to {}:{}, trying localhost".format(mosquitto_host, mosquitto_port))
-        client.connect("localhost")
+        raise ("Failed to connect to {}:{}. Check ENV variable MqttBrokerAddress".format(mosquitto_host, mosquitto_port))        
     return client    
 
 
 # Reacts to a published message
-def on_message(client, userdata, message):
-    print("Received Telemetry Message")
-    calculateScore(message)
+def on_message(client, userdata, msg):
+    print(f"Received Message topic {msg.topic} -> {msg.payload.decode()}")
+    calculateScore(msg)
 
 # Calculates a basic score based on the message
-def calculateScore(message):
-    print(message)
-    # global ecoScoreList
-    # client.publish("tripreportmodule/public/tripscoreliveupdate", ecoScore)
+def calculateScore(msg):
+    # ... code to calculate score goes here...
+    score = randint(1, 100)
+    # .....
+
+    print(f"Posting updated score {score}")
+    
+    # Sends the calculated score
+    scoreMsg = {"score":score}
+    scoreMsgString = json.dumps(scoreMsg)
+    scoreTopic = "samplemonitormodule/public/scoreupdate"
+    print(f"Publishing updated score {scoreTopic} -> {scoreMsgString}")
+    client.publish(scoreTopic, scoreMsgString)
   
 
-
 # Starts the application, connects to the mosquitto module
-
 print ("Starting Sample Monitoring Module... ")
 client = connect("sample-monitoring-module") 
 
