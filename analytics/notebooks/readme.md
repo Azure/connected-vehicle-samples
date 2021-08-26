@@ -14,7 +14,7 @@ Select "Next".
 
 In the ["Advanced" tab](https://docs.microsoft.com/en-us/azure/storage/blobs/create-data-lake-storage-account#enable-the-hierarchical-namespace), look for the "Data Lake Storage Gen2" section. Check the box for "Enable hierarchical namespace".
 
-Select "Review + Create". Select "Create". This may take a few minutes.
+Select "Review + Create". Select "Create". 
 
 Once the storage account has been successfully created, either select "Go to resource", or find the storage account in your resource group.
 
@@ -27,7 +27,7 @@ Note that on the "Basics" tab, there is a section to 'Select Data Lake Storage G
 
 For 'File system name', select 'Create new' and set 'datalake' as the name. Be sure to check the box below, "Assign myself the Storage Blob Data Contributor role on the Data Lake Storage Gen2 account."
 
-Select "Review + Create". Select "Create". This may take a few minutes.
+Select "Review + Create". Select "Create". 
 
 
 
