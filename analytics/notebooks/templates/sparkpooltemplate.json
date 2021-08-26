@@ -1,0 +1,122 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string"
+        },
+        "workspaceName": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "tags": {
+            "type": "object",
+            "defaultValue": {}
+        },
+        "isComputeIsolationEnabled": {
+            "type": "bool",
+            "defaultValue": false
+        },
+        "autoScaleEnabled": {
+            "type": "bool"
+        },
+        "autoScaleMinNodeCount": {
+            "type": "int",
+            "defaultValue": 3
+        },
+        "autoScaleMaxNodeCount": {
+            "type": "int",
+            "defaultValue": 40
+        },
+        "nodeCount": {
+            "type": "int",
+            "defaultValue": 3
+        },
+        "nodeSizeFamily": {
+            "type": "string"
+        },
+        "nodeSize": {
+            "type": "string"
+        },
+        "cacheSize": {
+            "type": "int",
+            "defaultValue": 0
+        },
+        "dynamicExecutorAllocationEnabled": {
+            "type": "bool",
+            "defaultValue": false
+        },
+        "autoPauseEnabled": {
+            "type": "bool"
+        },
+        "autoPauseDelayInMinutes": {
+            "type": "int",
+            "defaultValue": 15
+        },
+        "sparkVersion": {
+            "type": "string"
+        },
+        "libraryRequirementsFilename": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "libraryRequirementsContent": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "sessionLevelPackagesEnabled": {
+            "type": "bool",
+            "defaultValue": false
+        },
+        "sparkConfigPropertiesFileName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "sparkConfigPropertiesContent": {
+            "type": "string",
+            "defaultValue": ""
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Synapse/workspaces/bigDataPools",
+            "apiVersion": "2019-06-01-preview",
+            "name": "[concat(parameters('workspaceName'), '/', parameters('name'))]",
+            "location": "[parameters('location')]",
+            "tags": "[parameters('tags')]",
+            "properties": {
+                "nodeCount": "[parameters('nodeCount')]",
+                "isComputeIsolationEnabled": "[parameters('isComputeIsolationEnabled')]",
+                "nodeSizeFamily": "[parameters('nodeSizeFamily')]",
+                "nodeSize": "[parameters('nodeSize')]",
+                "autoScale": {
+                    "enabled": "[parameters('autoScaleEnabled')]",
+                    "minNodeCount": "[parameters('autoScaleMinNodeCount')]",
+                    "maxNodeCount": "[parameters('autoScaleMaxNodeCount')]"
+                },
+                "cacheSize": "[parameters('cacheSize')]",
+                "dynamicExecutorAllocation": {
+                    "enabled": "[parameters('dynamicExecutorAllocationEnabled')]"
+                },
+                "autoPause": {
+                    "enabled": "[parameters('autoPauseEnabled')]",
+                    "delayInMinutes": "[parameters('autoPauseDelayInMinutes')]"
+                },
+                "sparkVersion": "[parameters('sparkVersion')]",
+                "libraryRequirements": {
+                    "filename": "[parameters('libraryRequirementsFilename')]",
+                    "content": "[parameters('libraryRequirementsContent')]"
+                },
+                "sessionLevelPackagesEnabled": "[parameters('sessionLevelPackagesEnabled')]",
+                "sparkConfigProperties": {
+                    "filename": "[parameters('sparkConfigPropertiesFileName')]",
+                    "content": "[parameters('sparkConfigPropertiesContent')]"
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
