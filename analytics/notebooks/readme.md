@@ -66,7 +66,7 @@ Select **Review + Create**, then select **Create**.
 ### Running the Sample Notebooks
 Select the **Develop** tab.
 
-The Notebooks contain documentation cells with instructions on how to run each Notebook. This includes providing arguments for variables, and running specific cells.    
+The Notebooks contain documentation cells with instructions on how to run each Notebook. This includes providing arguments for variables and running specific cells.    
 
 The Sample Notebooks should be run in the following order :
 - rate-streaming-to-bronze
