@@ -50,6 +50,13 @@
                 "description": "The name of the analytics storage account."
             }
         },
+        "enablePrivateEndpointConnectionToAnalytics": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Specifies whether the platform account should access the analytics storage account through a private endpoint connection."
+            }
+        },
         "mcvpExtensionsStorageAccountType": {
             "type": "string",
             "defaultValue": "Standard_LRS",
@@ -223,6 +230,9 @@
                     },
                     "analyticsStorageAccountName": {
                         "value": "[parameters('analyticsStorageAccountName')]"
+                    },
+                    "enablePrivateEndpointConnectionToAnalytics": {
+                        "value": "[parameters('enablePrivateEndpointConnectionToAnalytics')]"
                     }
                 },
                 "template": {
@@ -252,6 +262,9 @@
                         },
                         "analyticsStorageAccountName": {
                             "type": "string"
+                        },
+                        "enablePrivateEndpointConnectionToAnalytics": {
+                            "type": "bool"
                         }
                     },
                     "resources": [
@@ -278,7 +291,14 @@
                                     "keySource": "Microsoft.Storage"
                                 },
                                 "isHnsEnabled": true,
-                                "accessTier": "Hot"
+                                "accessTier": "Hot",
+                                "networkAcls": {
+                                    "bypass": "None",
+                                    "defaultAction": "[if(parameters('enablePrivateEndpointConnectionToAnalytics'),'Deny','Allow')]",
+                                    "ipRules": [],
+                                    "resourceAccessRules": [],
+                                    "virtualNetworkRules": []
+                                }
                             }
                         },
                         {
@@ -291,7 +311,8 @@
                             },
                             "properties": {
                                 "analytics": {
-                                    "storageAccountResourceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('analyticsStorageAccountName'))]"
+                                    "storageAccountResourceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('analyticsStorageAccountName'))]",
+                                    "enablePrivateEndpointConnection": "[parameters('enablePrivateEndpointConnectionToAnalytics')]"
                                 },
                                 "extensions": [
                                     {
