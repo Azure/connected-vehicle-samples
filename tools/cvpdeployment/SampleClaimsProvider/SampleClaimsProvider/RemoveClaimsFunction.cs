@@ -6,7 +6,7 @@
 
 namespace SampleClaimsProvider
 {
-    using System.Text.Json;
+    using System.IO;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -14,6 +14,7 @@ namespace SampleClaimsProvider
     using Microsoft.Azure.WebJobs;
     using Microsoft.Azure.WebJobs.Extensions.Http;
     using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
 
     public class RemoveClaimsFunction
     {
@@ -40,7 +41,10 @@ namespace SampleClaimsProvider
         {
             log.LogInformation("[{tag}] Processing RemoveClaimsFunction", "");
 
-            ClaimsRequest claimsRequest = JsonSerializer.Deserialize<ClaimsRequest>(req.Body);
+            using StreamReader reader = new StreamReader(req.Body);
+            string requestBody = await reader.ReadToEndAsync();
+            ClaimsRequest claimsRequest = JsonConvert.DeserializeObject<ClaimsRequest>(requestBody);
+
             ClaimsProviderStore claimsProviderStore = new ClaimsProviderStore(log, client, Constants.DatabaseName, Constants.CollectionName);
             await claimsProviderStore.RemoveClaimsAsync(claimsRequest);
 

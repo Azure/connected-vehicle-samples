@@ -7,22 +7,22 @@
 namespace SampleClaimsProvider
 {
     using System;
-    using System.Text.Json.Serialization;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using Newtonsoft.Json;
 
     public class VehicleDeviceClaims
     {
-        [JsonPropertyName("LabeledClaims")]
+        [JsonProperty("LabeledClaims")]
         public Dictionary<string, Dictionary<string, Collection<string>>> LabeledClaims { get; set; } = new Dictionary<string, Dictionary<string, Collection<string>>>();
 
-        [JsonPropertyName("ExpiryTime")]
+        [JsonProperty("ExpiryTime")]
         public DateTimeOffset ExpiryTime { get; set; }
 
-        [JsonPropertyName("UserId")]
+        [JsonProperty("UserId")]
         public string UserId { get; set; }
 
-        [JsonPropertyName("VehicleId")]
+        [JsonProperty("VehicleId")]
         public string VehicleId { get; set; }
     }
 }

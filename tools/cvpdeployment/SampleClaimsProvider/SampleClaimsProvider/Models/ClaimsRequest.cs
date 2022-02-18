@@ -7,20 +7,20 @@
 namespace SampleClaimsProvider
 {
     using System.Collections.Generic;
-    using System.Text.Json.Serialization;
+    using Newtonsoft.Json;
 
     public class ClaimsRequest
     {
-        [JsonPropertyName("vehicleId")]
+        [JsonProperty("vehicleId")]
         public string VehicleId { get; set; }
 
-        [JsonPropertyName("userId")]
+        [JsonProperty("userId")]
         public string UserId { get; set; }
 
-        [JsonPropertyName("serviceId")]
+        [JsonProperty("serviceId")]
         public string ServiceId { get; set; }
 
-        [JsonPropertyName("claims")]
+        [JsonProperty("claims")]
         public List<StringClaim> Claims { get; set; }
     }
 }

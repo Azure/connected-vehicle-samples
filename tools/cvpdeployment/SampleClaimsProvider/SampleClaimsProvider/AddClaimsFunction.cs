@@ -7,12 +7,13 @@
 namespace SampleClaimsProvider
 {
     using System.Threading.Tasks;
-    using System.Text.Json;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Azure.WebJobs.Extensions.Http;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
+    using System.IO;
 
     public class AddClaimsFunction
     {
@@ -53,7 +54,10 @@ namespace SampleClaimsProvider
         {
             log.LogInformation("[{tag}] Processing Add Claims function.", "65231b53-7ec3-400c-9a5c-4595b2d2e000");
 
-            ClaimsRequest claimsRequest = JsonSerializer.Deserialize<ClaimsRequest>(req.Body);
+            using StreamReader reader = new StreamReader(req.Body);
+            string requestBody = await reader.ReadToEndAsync();
+            ClaimsRequest claimsRequest = JsonConvert.DeserializeObject<ClaimsRequest>(requestBody);
+
             ClaimsDocument claim = claimsRequest.CreateClaimsDocument();
 
             await claimsInfoItems.AddAsync(claim);

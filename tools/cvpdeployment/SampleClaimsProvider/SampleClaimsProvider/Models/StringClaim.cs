@@ -7,7 +7,7 @@
 namespace SampleClaimsProvider
 {
     using System.Collections.Generic;
-    using System.Text.Json.Serialization;
+    using Newtonsoft.Json;
 
     //This class represents a claim in a simplified format
     public class StringClaim
@@ -29,13 +29,13 @@ namespace SampleClaimsProvider
         /// <summary>
         ///     The Name of the claim (sometimes referred to as Type)
         /// </summary>
-        [JsonPropertyName("name")]
+        [JsonProperty("name")]
         public string Name { get; set; }
 
         /// <summary>
         ///     The Value of the claim represented by Name (multi-valued claims supported for compactness)
         /// </summary>
-        [JsonPropertyName("values")]
+        [JsonProperty("values")]
         public List<ClaimValue> Values { get; set; }
     }
 
@@ -50,7 +50,7 @@ namespace SampleClaimsProvider
         /// <summary>
         ///     The value of the claim
         /// </summary>
-        [JsonPropertyName("value")]
+        [JsonProperty("value")]
         public string Value { get; set; }
     }
 }
