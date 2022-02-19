@@ -18,7 +18,7 @@ Set-AzContext -SubscriptionId $SubscriptionId
 # All paths we'll use
 $sampleClaimsProviderPath = $PSScriptRoot + "/SampleClaimsProvider"
 $sampleClaimsProviderSolutionPath = $PSScriptRoot + "/SampleClaimsProvider/SampleClaimsProvider.sln"
-$sampleClaimsProviderBinariesPath = $sampleClaimsProviderPath + "/SampleClaimsProvider/bin/Debug"
+$sampleClaimsProviderBinariesPath = $sampleClaimsProviderPath + "/SampleClaimsProvider/bin/Debug/net6.0"
 $zipPath = $PSScriptRoot + "/sampleClaimProvider.zip"
 $functionAppArmTemplatePath = $PSScriptRoot + "/FunctionAppARMTemplate.json"
 
@@ -37,11 +37,25 @@ if ($null -eq $functionApp)
     {
         throw "Function app $FunctionAppName does not exist in $ResourceGroupName"
     }
-
+    
+    Write-Host "Deploying new function app"
     $armParameters = @{
         "appName" = $FunctionAppName
     }
     New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $functionAppArmTemplatePath -TemplateParameterObject $armParameters
+
+    # It can sometimes take a moment for the new function app to be recognized, if we move too quickly it won't be ready by the time we want to deploy to it
+    $bailoutTime = (Get-Date).AddMinutes(2)
+    while((Get-Date) -lt $bailoutTime -and $null -eq (Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName))
+    {
+        Start-Sleep -s 5
+    }
+    
+    $functionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName
+    if ($null -eq $functionApp)
+    {
+        throw "Timed out waiting for function app to finish deployment"
+    }
 }
 
 
@@ -72,7 +86,7 @@ try
 
     Write-Host "Uploading SampleClaimsProvider to $FunctionAppName"
     Publish-AzWebApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName -ArchivePath $zipPath -Force
-    Write-Host "Finised deploying SampleClaimsProvider"
+    Write-Host "Finished deploying SampleClaimsProvider"
 }
 finally 
 {

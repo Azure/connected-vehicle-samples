@@ -40,7 +40,7 @@
     "functionAppName": "[parameters('appName')]",
     "hostingPlanName": "[parameters('appName')]",
     "applicationInsightsName": "[parameters('appName')]",
-    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'azfunctions')]",
+    "storageAccountName": "[concat(uniquestring(resourceGroup().id, variables('functionAppName')), 'azfunctions')]",
     "functionWorkerRuntime": "dotnet"
   },
   "resources": [
