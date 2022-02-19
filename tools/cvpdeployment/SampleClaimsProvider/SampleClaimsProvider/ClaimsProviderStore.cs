@@ -53,10 +53,10 @@
             IDictionary<string, List<StringClaim>> claims = await this.LookupVehicleUserAsync(
                 vehicleId,
                 userId,
-                new Dictionary<string, IList<string>>()
-                {
-                    { PlaceHolderLabel, paths }
-                });
+                new Dictionary<string, IList<string>> {
+                        { PlaceHolderLabel, paths } 
+                    }
+                );
             if (claims is null)
             {
                 return null;
@@ -84,7 +84,7 @@
             }
             
             IDictionary<string, List<StringClaim>> vehicleClaims = await this.LookupClaimsByVehicleAndUser(vehicleId, null, labelsAndPaths);
-            if (vehicleClaims is null && !userVehicleClaims.Any())
+            if (vehicleClaims is null)
             { 
                 // if we found no claims documents for the vehicle and we don't have any user+vehicle claims, the vehicle is not in the database
                 return null; 
@@ -142,14 +142,7 @@
             {
                 HashSet<StringClaim> filteredClaims = new HashSet<StringClaim>();
 
-                IList<string> paths = labelsAndPath.Value;
-
-                if (paths == null || paths.Count == 0)
-                {
-                    paths = new List<string>() { $"{McvpPathPrefix}*" };
-                }
-
-                foreach (string path in paths)
+                foreach (string path in labelsAndPath.Value)
                 {
                     filteredClaims.UnionWith(this.FilterClaimsByPath(path, claims));
                 }
@@ -164,10 +157,6 @@
         { 
             bool matchAbsolute = !path.EndsWith("*");
             string pathPrefix = path.Split('*').First();
-            if (pathPrefix.StartsWith(McvpPathPrefix, StringComparison.OrdinalIgnoreCase))
-            {
-                pathPrefix = pathPrefix.Substring(McvpPathPrefix.Length);
-            }
 
             return claims.Where(claim =>
                 (matchAbsolute && claim.Name.Equals(pathPrefix, StringComparison.OrdinalIgnoreCase)) ||
