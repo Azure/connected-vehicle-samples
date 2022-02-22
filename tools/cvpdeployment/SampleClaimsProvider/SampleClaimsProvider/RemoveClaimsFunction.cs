@@ -16,6 +16,11 @@ namespace SampleClaimsProvider
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
 
+    /// <summary>
+    /// The RemoveClaimsFunction defined here is not required by your CVP instance. CVP will never attempt to call this route.
+    /// For this sample, it simply provides a way to remove data from the backing Cosmos database. 
+    /// You may choose to remove or manipulate data in your backing database in any way you see fit.
+    /// </summary>
     public class RemoveClaimsFunction
     {
         /// <summary> This function deletes a specified claim.

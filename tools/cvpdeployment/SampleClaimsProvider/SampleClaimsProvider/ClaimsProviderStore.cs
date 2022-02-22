@@ -1,24 +1,21 @@
 ﻿namespace SampleClaimsProvider
 {
+    using System;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using System.Collections.Generic;
     using Microsoft.Azure.Documents;
     using Microsoft.Azure.Documents.Client;
     using Microsoft.Azure.Documents.Linq;
     using Microsoft.Extensions.Logging;
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
-    using System.Runtime.CompilerServices;
-    using System.Threading.Tasks;
 
     /// <summary>
-    /// Provides a simplified interface for interacting with a cosmos db DocumentClient 
+    /// Provides a simplified interface for interacting with a cosmos db DocumentClient as a claims provider store.
+    /// No behavior defined here is required, you may implement it all as you see fit given that the responses provided to CVP are structured appropriately.
+    /// This is merely a sample implementation of a basic claims provider store.
     /// </summary>
     public class ClaimsProviderStore
     {
-        private const string PlaceHolderLabel = "ALL";
-        private const string McvpPathPrefix = "//mcvp/"; // For claims used by MCVP, for exmaple, specifiying claims on an arbitrary MQTT topic
-
         private readonly DocumentClient documentClient;
         private readonly string databaseName;
         private readonly string collectionName;
@@ -42,7 +39,7 @@
         }
 
         /// <summary>
-        ///     Retrieves the claims for a user and vehicle with optional authToken
+        ///     Retrieves the claims for a user and vehicle
         /// </summary>
         /// <param name="vehicleId">vehicleId to retrieve the claims for</param>
         /// <param name="userId">userId for which to retrieve the claims for</param>
@@ -50,13 +47,7 @@
         /// <returns>Claims on the vehicle/user. Null if the given vehicle doesn't exist.</returns>
         public async Task<VehicleUserInfo> RetrieveVehicleUserInfoAsync(string vehicleId, string userId, IList<string> paths)
         {
-            IDictionary<string, List<StringClaim>> claims = await this.LookupVehicleUserAsync(
-                vehicleId,
-                userId,
-                new Dictionary<string, IList<string>> {
-                        { PlaceHolderLabel, paths } 
-                    }
-                );
+            List<StringClaim> claims = await this.LookupVehicleUserAsync(vehicleId, userId, paths);
             if (claims is null)
             {
                 return null;
@@ -69,12 +60,12 @@
             };
         }
 
-        private async Task<IDictionary<string, List<StringClaim>>> LookupVehicleUserAsync(string vehicleId, string userId, Dictionary<string, IList<string>> labelsAndPaths)
+        private async Task<List<StringClaim>> LookupVehicleUserAsync(string vehicleId, string userId, IList<string> paths)
         {
-            IDictionary<string, List<StringClaim>> userVehicleClaims = null;
+            List<StringClaim> userVehicleClaims = new List<StringClaim>();
             if (!string.IsNullOrWhiteSpace(userId))
             {
-                userVehicleClaims = await this.LookupClaimsByVehicleAndUser(vehicleId, userId, labelsAndPaths);
+                userVehicleClaims = await this.LookupClaimsByVehicleAndUser(vehicleId, userId, paths);
                 
                 // If we're given a user id and we find no claims, there is no association between the given userId and vehicleId
                 if (userVehicleClaims is null)
@@ -83,17 +74,18 @@
                 }
             }
             
-            IDictionary<string, List<StringClaim>> vehicleClaims = await this.LookupClaimsByVehicleAndUser(vehicleId, null, labelsAndPaths);
+            List<StringClaim> vehicleClaims = await this.LookupClaimsByVehicleAndUser(vehicleId, null, paths);
             if (vehicleClaims is null)
             { 
                 // if we found no claims documents for the vehicle and we don't have any user+vehicle claims, the vehicle is not in the database
                 return null; 
             }
 
-            return vehicleClaims.MergeClaims(userVehicleClaims);
+            vehicleClaims.AddRange(userVehicleClaims);
+            return vehicleClaims;
         }
 
-        private async Task<IDictionary<string, List<StringClaim>>> LookupClaimsByVehicleAndUser(string vehicleId, string userId, IDictionary<string, IList<string>> labelsAndPaths)
+        private async Task<List<StringClaim>> LookupClaimsByVehicleAndUser(string vehicleId, string userId, IList<string> paths)
         {
             try
             {
@@ -123,7 +115,7 @@
 
                 if (claimsList != null)
                 {
-                    return this.FilterClaimsByPaths(claimsList, labelsAndPaths);
+                    return this.FilterClaimsByPaths(claimsList, paths);
                 }
                 return null;
             }
@@ -135,25 +127,19 @@
             }
         }
 
-        private IDictionary<string, List<StringClaim>> FilterClaimsByPaths(List<StringClaim> claims, IDictionary<string, IList<string>> labelsAndPaths)
+        private List<StringClaim> FilterClaimsByPaths(List<StringClaim> claims, IList<string> paths)
         {
-            IDictionary<string, List<StringClaim>> filteredLabelClaims = new Dictionary<string, List<StringClaim>>();
-            foreach (KeyValuePair<string, IList<string>> labelsAndPath in labelsAndPaths)
+            List<StringClaim> filteredClaims = new List<StringClaim>();
+
+            foreach (string path in paths)
             {
-                HashSet<StringClaim> filteredClaims = new HashSet<StringClaim>();
-
-                foreach (string path in labelsAndPath.Value)
-                {
-                    filteredClaims.UnionWith(this.FilterClaimsByPath(path, claims));
-                }
-
-                filteredLabelClaims[labelsAndPath.Key] = filteredClaims.ToList();
+                filteredClaims.AddRange(this.FilterClaimsByPath(path, claims));
             }
 
-            return filteredLabelClaims;
+            return filteredClaims.ToList();
         }
 
-        private HashSet<StringClaim> FilterClaimsByPath(string path, List<StringClaim> claims)
+        private IEnumerable<StringClaim> FilterClaimsByPath(string path, List<StringClaim> claims)
         { 
             bool matchAbsolute = !path.EndsWith("*");
             string pathPrefix = path.Split('*').First();
@@ -161,7 +147,7 @@
             return claims.Where(claim =>
                 (matchAbsolute && claim.Name.Equals(pathPrefix, StringComparison.OrdinalIgnoreCase)) ||
                 (!matchAbsolute && claim.Name.StartsWith(pathPrefix, StringComparison.OrdinalIgnoreCase))
-            ).ToHashSet();
+            );
         }
     }
 }

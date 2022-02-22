@@ -40,7 +40,10 @@
     "functionAppName": "[parameters('appName')]",
     "hostingPlanName": "[parameters('appName')]",
     "applicationInsightsName": "[parameters('appName')]",
-    "storageAccountName": "[concat(uniquestring(resourceGroup().id, variables('functionAppName')), 'azfunctions')]",
+    "storageAccountName": "[concat(uniquestring(resourceGroup().id, variables('functionAppName')), 'funcstg')]",
+    "cosmosDbAccountName": "[concat(variables('functionAppName'), '-claimsdb')]",
+    "claimsProviderDatabaseName": "ClaimsDB",
+    "claimsProviderContainerName": "VehicleUserClaims",
     "functionWorkerRuntime": "dotnet"
   },
   "resources": [
@@ -69,6 +72,23 @@
       }
     },
     {
+      "type": "Microsoft.DocumentDb/databaseAccounts",
+      "apiVersion": "2021-04-15",
+      "name": "[variables('cosmosdbAccountName')]",
+      "location": "[resourceGroup().location]",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+          "name": "[variables('cosmosdbAccountName')]",
+          "databaseAccountOfferType": "Standard",
+          "locations": [
+              {
+                  "failoverPriority": 0,
+                  "locationName": "[resourceGroup().location]"
+              }
+          ]
+      }
+    },
+    {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2020-06-01",
       "name": "[variables('functionAppName')]",
@@ -76,7 +96,8 @@
       "kind": "functionapp",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+        "[resourceId('Microsoft.DocumentDb/databaseAccounts', variables('cosmosDbAccountName'))]"
       ],
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
@@ -109,8 +130,58 @@
             {
               "name": "FUNCTIONS_WORKER_RUNTIME",
               "value": "[variables('functionWorkerRuntime')]"
+            },
+            {
+              "name": "ConnectionStrings__CosmosDBConnectionString",
+              "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdbAccountName')), '2021-04-15').connectionStrings[0].connectionString]"
             }
           ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+      "name": "[concat(variables('cosmosdbAccountName'), '/', variables('claimsProviderDatabaseName'))]",
+      "apiVersion": "2020-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[variables('claimsProviderDatabaseName')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "name": "[concat(variables('cosmosdbAccountName'), '/', variables('claimsProviderDatabaseName'), '/', variables('claimsProviderContainerName'))]",
+      "apiVersion": "2020-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosdbAccountName'), variables('claimsProviderDatabaseName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[variables('claimsProviderContainerName')]",
+          "partitionKey": {
+            "paths": [
+              "/partitionKey"
+            ],
+            "kind": "Hash"
+          },
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ]
+          },
+          "defaultTtl": 604800
         }
       }
     },

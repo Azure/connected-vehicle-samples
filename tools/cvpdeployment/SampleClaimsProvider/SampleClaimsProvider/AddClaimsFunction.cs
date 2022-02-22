@@ -14,7 +14,12 @@ namespace SampleClaimsProvider
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using System.IO;
-
+    
+    /// <summary>
+    /// The AddClaimsFunction defined here is not required by your CVP instance. CVP will never attempt to call this route.
+    /// For this sample, it simply provides a way to add data into the backing Cosmos database. 
+    /// You may choose to add data to your backing database in any way you see fit.
+    /// </summary>
     public class AddClaimsFunction
     {
         /// <summary> This function adds a specified claim.

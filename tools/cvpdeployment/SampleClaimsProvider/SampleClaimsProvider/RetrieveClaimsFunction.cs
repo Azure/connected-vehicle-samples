@@ -18,7 +18,12 @@ namespace SampleClaimsProvider
     using Microsoft.Azure.WebJobs;
     using Microsoft.Azure.WebJobs.Extensions.Http;
     using Microsoft.Extensions.Logging;
-
+    
+    /// <summary>
+    /// The 3 RetreiveClaims functions defined here are all required claims provider routes. Your CVP instance will reach out to these endpoints to retrieve necessary claims information.
+    /// The routes must match what is shown below for CVP to be able to interact with your claims provider. 
+    /// In addition the response structure must also match what is show below. How you go about retreiving claims from your database is entirely up to you.
+    /// </summary>
     public class RetrieveClaimsFunction
     {
         /// <summary> This function retrieves claims for a specified vehicleId.
@@ -27,16 +32,14 @@ namespace SampleClaimsProvider
         /// </example>
         /// </summary>
         [FunctionName("RetrieveClaimsWithVehicleIdFunction")]
-        public async Task<IActionResult> RetrieveClaimsWithVehicleId(
+        public Task<IActionResult> RetrieveClaimsWithVehicleId(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "claims/claimInfo/vehicles/{vehicleId}")] HttpRequest req, string vehicleId,
             [CosmosDB(
                 databaseName: Constants.DatabaseName,
                 collectionName: Constants.CollectionName,
                 ConnectionStringSetting = "ConnectionStrings:CosmosDBConnectionString")] DocumentClient client,
             ILogger log)
-        {
-            return await this.RetrieveClaimsAsync(req, vehicleId, userId: null, client, log);
-        }
+        => this.RetrieveClaimsAsync(req, vehicleId, userId: null, client, log);
 
         /// <summary> This function retrieves claims for a specified vehicleId and userId.
         /// <example>
@@ -44,16 +47,14 @@ namespace SampleClaimsProvider
         /// </example>
         /// </summary>
         [FunctionName("RetrieveClaimsWithVehicleAndUserIdFunction")]
-        public async Task<IActionResult> RetrieveClaimsWithVehicleAndUserId(
+        public Task<IActionResult> RetrieveClaimsWithVehicleAndUserId(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "claims/claimInfo/vehicles/{vehicleId}/users/{userId}")] HttpRequest req, string vehicleId, string userId,
             [CosmosDB(
                 databaseName: Constants.DatabaseName,
                 collectionName: Constants.CollectionName,
                 ConnectionStringSetting = "ConnectionStrings:CosmosDBConnectionString")] DocumentClient client,
             ILogger log)
-        {
-            return await this.RetrieveClaimsAsync(req, vehicleId, userId, client, log);
-        }
+        => this.RetrieveClaimsAsync(req, vehicleId, userId, client, log);
 
         [FunctionName("RetrieveClaimsByLabel")]
         public async Task<IActionResult> RetrieveClaimsByLabel(

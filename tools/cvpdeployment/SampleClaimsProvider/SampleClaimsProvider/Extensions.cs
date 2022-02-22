@@ -8,7 +8,6 @@ namespace SampleClaimsProvider
 {
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Linq;
 
     public static class Extensions
     {
@@ -42,11 +41,11 @@ namespace SampleClaimsProvider
             return existingClaims;
         }
 
-        public static Dictionary<string, Collection<string>> ToClaimsCollection(this IDictionary<string, List<StringClaim>> labeledClaims)
+        public static Dictionary<string, Collection<string>> ToClaimsCollection(this List<StringClaim> claims)
         { 
             Dictionary<string, Collection<string>> claimsCollection = new Dictionary<string, Collection<string>>();
 
-            foreach (StringClaim claim in labeledClaims.Values.SelectMany(x => x))
+            foreach (StringClaim claim in claims)
             {
                 if (!claimsCollection.ContainsKey(claim.Name))
                 {
