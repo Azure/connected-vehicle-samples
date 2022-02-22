@@ -287,8 +287,6 @@ StyleCopViolations.xml
 
 # VSCode
 **/.vscode/*
-
-**/Microsoft.Azure.ConnectedCar.ExtensionHostManager/cache
 **/vim.exe.stackdump
 
 # Swagger API description JSON - used for generating swagger clients
