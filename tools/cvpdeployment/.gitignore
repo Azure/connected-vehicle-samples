@@ -323,9 +323,6 @@ launchSettings.json
 [Gg]enerated*/
 **/* - Zip Deploy*
 
-# Ignore generated Mooncake templates
-**/MCTemplates/*
-
 # Ignore metals/bloop related cruft and analytics runtime generated files
 *.iml
 .idea/
@@ -333,15 +330,6 @@ launchSettings.json
 **/.bloop/
 **/metals*.*
 **/.localstorage/**
-
-# Ignore secrets files
-*.secrets.*
-/src/Platform/AzureFunctions/CustomExtensions/Properties/PublishProfiles
-/src/Platform/AzureFunctions/CustomExtensions/Properties/ServiceDependencies
-/src/Vernemq/webhooks/McvpMqttWebHooks/appsettings.Development.json
-/src/Vernemq/docker/broker.env
-/src/GenevaActions/ConnectedVehicleExtension/GenevaActionPackages
-/infra/deployment/Ev2/GenevaActionPackages
 
 # Azure Functions localsettings file
 local.settings.json
