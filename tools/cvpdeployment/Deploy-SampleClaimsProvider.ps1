@@ -6,6 +6,9 @@
     Deploys the sample claims provider to the given function app. The sample claims provider requires a Cosmos DB instance to run and the function app it is deployed to must have the application setting 'ConnectionStrings__CosmosDBConnectionString' set with a connection string to that CosmosDB instance.
     If the -CreateClaimsProviderResources parameter is provided then an ARM template will be ran deploying a new function app and Cosmos DB instance. In addition it will configure the connection strings between the function app and the Cosmos DB.
 
+    Requires .NET 6 SDK installed to build the sample claims provider.
+    https://dotnet.microsoft.com/en-us/download/dotnet/6.0
+
 .PARAMETER SubscriptionId
     The id of the subscription to deploy the sample claims provider to.
 
@@ -14,7 +17,7 @@
 
 .PARAMETER FunctionAppName
     The name of the function app to deploy the sample claims provider to.
-    If -CreateFunctionApp is provided this will be the name of the newly created function app and supporting resources.
+    If -CreateClaimsProviderResources is provided this will be the name of the newly created function app and supporting resources.
 
 .PARAMETER CreateClaimsProviderResources
     If provided, an ARM template will run deploying a new function app, cosmos db, and required supporting resources.
