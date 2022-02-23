@@ -1,3 +1,25 @@
+<#
+.SYNOPSIS
+    Deploys the sample claims provider to the given function app. If -CreateFunctionApp is provided it will deploy a new function app and cosmos db to use for the sample claims provider.
+
+.DESCRIPTION
+    Deploys the sample claims provider to the given function app. The sample claims provider requires a Cosmos DB instance to run and the function app it is deployed to must have the application setting 'ConnectionStrings__CosmosDBConnectionString' set with a connection string to that CosmosDB instance.
+    If the -CreateFunctionApp parameter is provided then an ARM template will be ran deploying a new function app and Cosmos DB instance. In addition it will configure the connection strings between the function app and the Cosmos DB.
+
+.PARAMETER SubscriptionId
+    The id of the subscription to deploy the sample claims provider to.
+
+.PARAMETER ResourceGroupName
+    The name of the resource group to deploy the sample claims provider to.
+
+.PARAMETER FunctionAppName
+    The name of the function app to deploy the sample claims provider to.
+    If -CreateFunctionApp is provided this will be the name of the newly created function app and supporting resources.
+
+.PARAMETER CreateFunctionApp
+    If provided an ARM template will run deploying a new function app, cosmos db, and required supporting resources.
+    In addition the function app will be configured appropriately with a connection string to the cosmos db instance.
+#>
 [cmdletbinding()]
 PARAM (
     [parameter(mandatory = $true)]
