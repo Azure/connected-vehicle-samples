@@ -24,6 +24,9 @@
     In addition the function app will be configured appropriately with a connection string to the cosmos db instance.
     The sample claims provider will then be deployed to this newly created function app
 
+.PARAMETER Location
+    The location to deploy the claims provider resources to. Defaults to eastus.
+
 .EXAMPLE
     The simplest use case starts with an existing resource group and no function app deployed.
     This example will create a new function app called 'sample-claims-provider' in the 'contoso-rg' under the subscription 0d82dd27-098f-414c-9259-2436d030609d.
@@ -31,6 +34,14 @@
     Once deployed the sample claims provider should be fully functional.
 
     PS C:\> ./Deploy-SampleClaimsProvider.ps1 -SubscriptionId 00000000-1111-2222-3333-444444444444 -ResourceGroupName contoso-rg -FunctionAppName sample-claims-provider -CreateClaimsProviderResources
+
+.EXAMPLE
+    If you want to change the location of the created resources you can specify the Location parameter.
+    This example will create a new function app called 'sample-claims-provider' in the 'contoso-rg' under the subscription 0d82dd27-098f-414c-9259-2436d030609d in the location 'eastus2'
+    In addition all supporting resources, such as a cosmos db, are created and the sample claims provider will be deployed to the newly created 'smaple-claims-provider' function app.
+    Once deployed the sample claims provider should be fully functional.
+
+    PS C:\> ./Deploy-SampleClaimsProvider.ps1 -SubscriptionId 00000000-1111-2222-3333-444444444444 -ResourceGroupName contoso-rg -FunctionAppName sample-claims-provider -CreateClaimsProviderResources -Location eastus2
 
 .EXAMPLE
     If you already have a function app setup that you would prefer to use, you can omit the -CreateClaimsProviderResources paramter.
@@ -48,9 +59,12 @@ PARAM (
 
     [parameter(mandatory = $true)]
     [string] $FunctionAppName,
+    
+    [parameter(mandatory = $false)]
+    [switch] $CreateClaimsProviderResources,
 
     [parameter(mandatory = $false)]
-    [switch] $CreateClaimsProviderResources
+    [string] $Location = "eastus"
 )
 $ErrorActionPreference = "Stop"
 Set-AzContext -SubscriptionId $SubscriptionId
@@ -75,6 +89,8 @@ if ($CreateClaimsProviderResources)
     Write-Host "Deploying claims provider function app and cosmos database"
     $armParameters = @{
         "appName" = $FunctionAppName
+        "location" = $Location
+        "appInsightsLocation" = $Location
     }
     $deploymentOutputs = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $functionAppArmTemplatePath -TemplateParameterObject $armParameters
 
