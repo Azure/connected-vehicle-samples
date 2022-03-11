@@ -23,14 +23,14 @@
     },
     "location": {
       "type": "string",
-      "defaultValue": "[resourceGroup().location]",
+      "defaultValue": "eastus",
       "metadata": {
         "description": "Location for all resources."
       }
     },
     "appInsightsLocation": {
       "type": "string",
-      "defaultValue": "[resourceGroup().location]",
+      "defaultValue": "eastus",
       "metadata": {
         "description": "Location for Application Insights"
       }
@@ -75,7 +75,7 @@
       "type": "Microsoft.DocumentDb/databaseAccounts",
       "apiVersion": "2021-04-15",
       "name": "[variables('cosmosdbAccountName')]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('location')]",
       "kind": "GlobalDocumentDB",
       "properties": {
           "name": "[variables('cosmosdbAccountName')]",
@@ -83,7 +83,7 @@
           "locations": [
               {
                   "failoverPriority": 0,
-                  "locationName": "[resourceGroup().location]"
+                  "locationName": "[parameters('location')]"
               }
           ]
       }
