@@ -74,28 +74,6 @@
             "metadata": {
                 "description": "Claims provider uri which is used for platformAccount deployment."
             }
-        },
-        "logAnalyticsWorkspaceName": {
-            "type": "string",
-            "defaultValue": "[concat(uniqueString(resourceGroup().id), 'mcvplogs')]",
-            "metadata": {
-                "description": "The name of the log analytics workspace to configure diagnostic settings for MCVP."
-            }
-        },
-        "logAnalyticsWorkspaceSku": {
-            "type": "string",
-            "allowedValues": [
-                "pergb2018",
-                "Free",
-                "Standalone",
-                "PerNode",
-                "Standard",
-                "Premium"
-            ],
-            "defaultValue": "pergb2018",
-            "metadata": {
-                "description": "Pricing tier: PerGB2018 or legacy tiers (Free, Standalone, PerNode, Standard or Premium) which are not available to all customers."
-            }
         }
     },
     "resources": [
@@ -439,103 +417,6 @@
                             "properties": {
                                 "roleDefinitionId": "[variables('storageBlobDataOwnerRoleId')]",
                                 "principalId": "[parameters('mcvpPrincipalId')]"
-                            }
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2020-10-01",
-            "name": "DiagnosticSettingsConfiguration",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'Mcvp')]"
-            ],
-            "properties": {
-                "expressionEvaluationOptions": {
-                    "scope": "inner"
-                },
-                "mode": "Incremental",
-                "parameters": {
-                    "location": {
-                        "value": "[parameters('location')]"
-                    },
-                    "platformAccountName": {
-                        "value": "[parameters('platformAccountName')]"
-                    },
-                    "logAnalyticsWorkspaceName": {
-                        "value": "[parameters('logAnalyticsWorkspaceName')]"
-                    },
-                    "logAnalyticsWorkspaceSku": {
-                        "value": "[parameters('logAnalyticsWorkspaceSku')]"
-                    }
-                },
-                "template": {
-                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {
-                        "location": {
-                            "type": "string"
-                        },
-                        "platformAccountName": {
-                            "type": "string"
-                        },
-                        "logAnalyticsWorkspaceName": {
-                            "type": "string"
-                        },
-                        "logAnalyticsWorkspaceSku": {
-                            "type": "string"
-                        }
-                    },
-                    "variables": {
-                        "diagnosticSettingsName": "DiagnosticLogs",
-                        "logAnalyticsDefaultRetention": "120"
-                    },
-                    "resources": [
-                        {
-                            "type": "Microsoft.OperationalInsights/workspaces",
-                            "name": "[parameters('logAnalyticsWorkspaceName')]",
-                            "apiVersion": "2020-08-01",
-                            "location": "[parameters('location')]",
-                                "properties": {
-                                "sku": {
-                                    "name": "[parameters('logAnalyticsWorkspaceSku')]"
-                                },
-                                "retentionInDays": "[variables('logAnalyticsDefaultRetention')]",
-                                "features": {
-                                    "enableLogAccessUsingOnlyResourcePermissions": true
-                                }
-                            }
-                        },
-                        {
-                            "type":"Microsoft.ConnectedVehicle/platformAccounts/providers/diagnosticSettings",
-                            "name":"[concat(parameters('platformAccountName'),'/Microsoft.Insights/',variables('diagnosticSettingsName'))]",
-                            "dependsOn": [
-                                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
-                            ],
-                            "apiVersion":"2021-05-01-preview",
-                            "properties":{
-                                "storageAccountId":null,
-                                "eventHubAuthorizationRuleId":null,
-                                "eventHubName":null,
-                                "workspaceId":"[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]",
-                                "logs":[
-                                    {
-                                        "category":"Logs",
-                                        "enabled":true
-                                   },
-                                   {
-                                        "category":"Audit",
-                                        "enabled":true
-                                   }
-                                ],
-                                "metrics":[
-                                    {
-                                        "category":"AllMetrics",
-                                        "enabled":true
-                                    }
-                                ]
                             }
                         }
                     ]
