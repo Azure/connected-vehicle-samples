@@ -49,6 +49,7 @@ PARAM (
 
 $ErrorActionPreference = "Stop"
 $templatePath = "C:\repos\connected-vehicle-samples\tools\cvpdeployment\MultiExtensionCVPARMTemplate.json"
+$diagnosticLogTemplatePath = "C:\repos\connected-vehicle-samples\tools\cvpdeployment\DiagnosticLogsArmTemplate.json"
 
 Set-AzContext -SubscriptionId $SubscriptionId
 
@@ -88,3 +89,5 @@ $armParameters = @{
 }
 
 New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri $templatePath -TemplateParameterObject $armParameters
+
+New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri $diagnosticLogTemplatePath
