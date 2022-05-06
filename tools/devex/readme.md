@@ -8,7 +8,7 @@
 5. [Azurite for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=Azurite.azurite)
 
 ## Installation
-1. Download the VSIX file for the [Connected Vehicle Extensions for Visual Studio Code](https://github.com/Azure/connected-vehicle-samples/blob/main/Tools/connectedvehicleextensions-1.0.0-preview.vsix).
+1. Download the VSIX file for the [Connected Vehicle Extensions for Visual Studio Code](https://github.com/Azure/connected-vehicle-samples/blob/main/tools/devex/connectedvehicleextensions-1.0.0-preview.vsix).
 2. Run the following command:
 
 ```
