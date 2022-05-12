@@ -26,9 +26,14 @@ namespace SampleClaimsProvider
     /// </summary>
     public class RetrieveClaimsFunction
     {
-        /// <summary> This function retrieves claims for a specified vehicleId.
+        /// <summary> This function retrieves claims for a specified vehicleId. Providing a path query parameter is required.
         /// <example>
-        /// [GET] https://{hostname}/api/claimInfo/vehicles/testVehicle1?paths=path1
+        /// Gets the claims under the path 'path1' for vehicle testVehicle1
+        /// [GET] https://{hostname}/api/claims/claimInfo/vehicles/testVehicle1?paths=path1
+        /// </example>
+        /// <example>
+        /// Gets all claims for vehicle testVehicle1
+        /// [GET] https://{hostname}/api/claims/claimInfo/vehicles/testVehicle1?paths=*
         /// </example>
         /// </summary>
         [FunctionName("RetrieveClaimsWithVehicleIdFunction")]
@@ -41,9 +46,14 @@ namespace SampleClaimsProvider
             ILogger log)
         => this.RetrieveClaimsAsync(req, vehicleId, userId: null, client, log);
 
-        /// <summary> This function retrieves claims for a specified vehicleId and userId.
+        /// <summary> This function retrieves claims for a specified vehicleId and userId. Providing a path query parameter is required.
         /// <example>
-        /// [GET] https://{hostname}/api/claimInfo/vehicles/testVehicle1/users/testUser1?paths=path1
+        /// Gets the claims under the path 'path1' for vehicle testVehicle1 and user testUser1
+        /// [GET] https://{hostname}/api/claims/claimInfo/vehicles/testVehicle1/users/testUser1?paths=path1
+        /// </example>
+        /// <example>
+        /// Gets all claims for vehicle testVehicle1 and user testUser1
+        /// [GET] https://{hostname}/api/claims/claimInfo/vehicles/testVehicle1/users/testUser1?paths=*
         /// </example>
         /// </summary>
         [FunctionName("RetrieveClaimsWithVehicleAndUserIdFunction")]
@@ -55,7 +65,21 @@ namespace SampleClaimsProvider
                 ConnectionStringSetting = "ConnectionStrings:CosmosDBConnectionString")] DocumentClient client,
             ILogger log)
         => this.RetrieveClaimsAsync(req, vehicleId, userId, client, log);
-
+        
+        /// <summary> This function retrieves and labels claims for a specified vehicle
+        /// <example>
+        /// Gets the claims under the path 'path1' and places them under 'Label1' for vehicle testVehicle1
+        /// [POST] https://{hostname}/api/claims/claimInfo/vehicles/testVehicle1/labels
+        ///     <code>
+        ///     Json Body:
+        /// {
+        ///     "Label1" : [
+        ///         "path1" 
+        ///     ] 
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
         [FunctionName("RetrieveClaimsByLabel")]
         public async Task<IActionResult> RetrieveClaimsByLabel(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "claims/claimInfo/vehicles/{vehicleId}/labels")] HttpRequest req, string vehicleId,
