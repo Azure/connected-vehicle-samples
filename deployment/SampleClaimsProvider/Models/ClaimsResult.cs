@@ -11,10 +11,10 @@ namespace SampleClaimsProvider
     using System.Collections.ObjectModel;
     using Newtonsoft.Json;
 
-    public class VehicleDeviceClaims
+    public class ClaimsResult
     {
-        [JsonProperty("LabeledClaims")]
-        public Dictionary<string, Dictionary<string, Collection<string>>> LabeledClaims { get; set; } = new Dictionary<string, Dictionary<string, Collection<string>>>();
+        [JsonProperty("Claims")]
+        public Dictionary<string, Collection<string>> Claims { get; set; }
 
         [JsonProperty("ExpiryTime")]
         public DateTimeOffset ExpiryTime { get; set; }

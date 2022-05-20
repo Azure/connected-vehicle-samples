@@ -1,0 +1,491 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "customerAppInsightsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Location of AppInsights service"
+      }
+    },
+    "appSettingsEndpointSuffix": {
+      "type": "string",
+      "metadata": {
+        "description": "Endpoint suffix for app storage"
+      }
+    },
+    "azureWebsitesSuffix": {
+      "type": "string",
+      "metadata": {
+        "description": "Endpoint suffix for azure websites. can change based on the azure cloud region."
+      }
+    },
+    "customerPrefix": {
+      "type": "string",
+      "defaultValue": "[substring(uniqueString(subscription().subscriptionId, resourceGroup().name), 0, 8)]"
+    },
+    "denyPublicNetworkAccessToAnalytics": {
+      "type": "bool",
+      "defaultValue": true
+    },
+    "hostingPlanName": {
+      "type": "string"
+    },
+    "hostingPlanRG": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "cosmosdbApiVersion": "2019-12-12",
+    "storageApiVersion": "2019-06-01",
+    "functionsAppApiVersion": "2018-11-01",
+    "cosmosdbAccountName": "[concat(parameters('customerPrefix'), '-extdb')]",
+    "functionsAppName": "[concat(parameters('customerPrefix'), '-cust-extensions')]",
+    "testMultipleFunctionsAppName": "[concat(parameters('customerPrefix'), '-other-extensions')]",
+    "claimsProviderAppName": "[concat(parameters('customerPrefix'), '-claimsapp')]",
+    "appInsightsName": "[concat(parameters('customerPrefix'), '-logging')]",
+    "hostingEnvironment": "",
+    "storageAccountName": "[concat(parameters('customerPrefix'), 'exstg')]",
+    "analyticsStorageAccountName": "[concat(parameters('customerPrefix'), 'exstgana')]",
+    "claimsProviderDatabaseName": "ClaimsDB",
+    "claimsProviderContainerName": "VehicleUserClaims",
+    "minimumTlsVersion": "TLS1_2"
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('storageApiVersion')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('analyticsStorageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "minimumTlsVersion": "[variables('minimumTlsVersion')]",
+        "supportsHttpsTrafficOnly": true,
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            },
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        },
+        "isHnsEnabled": true,
+        "networkAcls": {
+          "bypass": "None",
+          "defaultAction": "[if(parameters('denyPublicNetworkAccessToAnalytics') ,'Deny','Allow')]",
+          "ipRules": [],
+          "resourceAccessRules": [],
+          "virtualNetworkRules": []
+        },
+        "accessTier": "Hot"
+      }
+    },
+    {
+      "apiVersion": "[variables('cosmosdbApiVersion')]",
+      "kind": "GlobalDocumentDB",
+      "type": "Microsoft.DocumentDb/databaseAccounts",
+      "name": "[variables('cosmosdbAccountName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[variables('cosmosdbAccountName')]",
+        "databaseAccountOfferType": "Standard"
+      }
+    },
+    {
+      "apiVersion": "[variables('functionsAppApiVersion')]",
+      "name": "[variables('functionsAppName')]",
+      "type": "Microsoft.Web/sites",
+      "kind": "functionapp",
+      "location": "[resourceGroup().location]",
+      "tags": null,
+      "dependsOn": [
+        "[concat('microsoft.insights/components/', variables('appInsightsName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "name": "[variables('functionsAppName')]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "1"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~3"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(concat('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(concat('microsoft.insights/components/',variables('appInsightsName')), '2015-05-01').ConnectionString]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=',parameters('appSettingsEndpointSuffix'))]"
+            },
+            {
+              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=',parameters('appSettingsEndpointSuffix'))]"
+            },
+            {
+              "name": "WEBSITE_CONTENTSHARE",
+              "value": "[concat(toLower(variables('functionsAppName')), 'aa1e')]"
+            }
+          ]
+        },
+        "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId  ,'/resourcegroups/', parameters('hostingPlanRG'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+        "hostingEnvironment": "[variables('hostingEnvironment')]",
+        "clientAffinityEnabled": true
+      }
+    },
+    {
+      "apiVersion": "[variables('functionsAppApiVersion')]",
+      "name": "[variables('testMultipleFunctionsAppName')]",
+      "type": "Microsoft.Web/sites",
+      "kind": "functionapp",
+      "location": "[resourceGroup().location]",
+      "tags": null,
+      "dependsOn": [
+        "[concat('microsoft.insights/components/', variables('appInsightsName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "name": "[variables('testMultipleFunctionsAppName')]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "1"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~3"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(concat('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(concat('microsoft.insights/components/',variables('appInsightsName')), '2015-05-01').ConnectionString]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=',parameters('appSettingsEndpointSuffix'))]"
+            },
+            {
+              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=',parameters('appSettingsEndpointSuffix'))]"
+            },
+            {
+              "name": "WEBSITE_CONTENTSHARE",
+              "value": "[concat(toLower(variables('testMultipleFunctionsAppName')), 'aa1e')]"
+            }
+          ]
+        },
+        "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId  ,'/resourcegroups/', parameters('hostingPlanRG'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+        "hostingEnvironment": "[variables('hostingEnvironment')]",
+        "clientAffinityEnabled": true
+      }
+    },
+    {
+      "apiVersion": "2015-05-01",
+      "name": "[variables('appInsightsName')]",
+      "type": "microsoft.insights/components",
+      "location": "[parameters('customerAppInsightsLocation')]",
+      "kind": "",
+      "properties": {
+        "ApplicationId": "[variables('appInsightsName')]",
+        "Application_Type": "other",
+        "Request_Source": "rest"
+      }
+    },
+    {
+      "apiVersion": "[variables('storageApiVersion')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "properties": {
+        "minimumTlsVersion": "[variables('minimumTlsVersion')]",
+        "supportsHttpsTrafficOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+      "name": "[concat(variables('cosmosdbAccountName'), '/', variables('claimsProviderDatabaseName'))]",
+      "apiVersion": "2020-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[variables('claimsProviderDatabaseName')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "name": "[concat(variables('cosmosdbAccountName'), '/', variables('claimsProviderDatabaseName'), '/', variables('claimsProviderContainerName'))]",
+      "apiVersion": "2020-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosdbAccountName'), variables('claimsProviderDatabaseName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[variables('claimsProviderContainerName')]",
+          "partitionKey": {
+            "paths": [
+              "/partitionKey"
+            ],
+            "kind": "Hash"
+          },
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ]
+          },
+          "defaultTtl": 604800
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2021-03-01",
+      "name": "[variables('claimsProviderAppName')]",
+      "location": "[resourceGroup().location]",
+      "kind": "app",
+      "dependsOn": [
+        "[concat('microsoft.insights/components/', variables('appInsightsName'))]",
+        "[concat('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosdbAccountName'))]"
+      ],
+      "properties": {
+        "enabled": true,
+        "hostNameSslStates": [
+          {
+            "name": "[concat(variables('claimsProviderAppName'), '.', parameters('azureWebsitesSuffix'))]",
+            "sslState": "Disabled",
+            "hostType": "Standard"
+          },
+          {
+            "name": "[concat(variables('claimsProviderAppName'), '.scm.', parameters('azureWebsitesSuffix'))]",
+            "sslState": "Disabled",
+            "hostType": "Repository"
+          }
+        ],
+        "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId  ,'/resourcegroups/', parameters('hostingPlanRG'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+        "siteConfig": {
+          "alwaysOn": true,
+          "appSettings": [
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(concat('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(concat('microsoft.insights/components/',variables('appInsightsName')), '2015-05-01').ConnectionString]"
+            },
+            {
+              "name": "ConnectionStrings__CosmosDBConnectionString",
+              "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdbAccountName')), variables('cosmosdbApiVersion')).connectionStrings[0].connectionString]"
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "1"
+            }
+          ]
+        },
+        "clientAffinityEnabled": true,
+        "clientCertEnabled": false,
+        "clientCertMode": "Required",
+        "hostNamesDisabled": false,
+        "httpsOnly": true,
+        "keyVaultReferenceIdentity": "SystemAssigned"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+      "apiVersion": "2021-03-01",
+      "name": "[concat(variables('claimsProviderAppName'), '/ftp')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('claimsProviderAppName'))]"
+      ],
+      "properties": {
+        "allow": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+      "apiVersion": "2021-03-01",
+      "name": "[concat(variables('claimsProviderAppName'), '/scm')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('claimsProviderAppName'))]"
+      ],
+      "properties": {
+        "allow": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2021-03-01",
+      "name": "[concat(variables('claimsProviderAppName'), '/web')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('claimsProviderAppName'))]"
+      ],
+      "properties": {
+        "numberOfWorkers": 1,
+        "defaultDocuments": [
+          "Default.htm",
+          "Default.html",
+          "Default.asp",
+          "index.htm",
+          "index.html",
+          "iisstart.htm",
+          "default.aspx",
+          "index.php",
+          "hostingstart.html"
+        ],
+        "netFrameworkVersion": "v5.0",
+        "requestTracingEnabled": false,
+        "remoteDebuggingEnabled": false,
+        "httpLoggingEnabled": false,
+        "acrUseManagedIdentityCreds": false,
+        "logsDirectorySizeLimit": 35,
+        "detailedErrorLoggingEnabled": false,
+        "scmType": "None",
+        "use32BitWorkerProcess": true,
+        "webSocketsEnabled": false,
+        "alwaysOn": true,
+        "managedPipelineMode": "Integrated",
+        "virtualApplications": [
+          {
+            "virtualPath": "/",
+            "physicalPath": "site\\wwwroot",
+            "preloadEnabled": true
+          }
+        ],
+        "loadBalancing": "LeastRequests",
+        "experiments": {
+          "rampUpRules": []
+        },
+        "autoHealEnabled": false,
+        "vnetRouteAllEnabled": false,
+        "vnetPrivatePortsCount": 0,
+        "publicNetworkAccess": "Enabled",
+        "localMySqlEnabled": false,
+        "ipSecurityRestrictions": [
+          {
+            "ipAddress": "Any",
+            "action": "Allow",
+            "priority": 1,
+            "name": "Allow all",
+            "description": "Allow all access"
+          }
+        ],
+        "scmIpSecurityRestrictions": [
+          {
+            "ipAddress": "Any",
+            "action": "Allow",
+            "priority": 1,
+            "name": "Allow all",
+            "description": "Allow all access"
+          }
+        ],
+        "scmIpSecurityRestrictionsUseMain": false,
+        "http20Enabled": false,
+        "minTlsVersion": "1.2",
+        "scmMinTlsVersion": "1.0",
+        "ftpsState": "AllAllowed",
+        "preWarmedInstanceCount": 0,
+        "functionAppScaleLimit": 0,
+        "functionsRuntimeScaleMonitoringEnabled": false,
+        "minimumElasticInstanceCount": 0,
+        "azureStorageAccounts": {}
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/hostNameBindings",
+      "apiVersion": "2021-03-01",
+      "name": "[concat(variables('claimsProviderAppName'), '/', variables('claimsProviderAppName'), '.', parameters('azureWebsitesSuffix'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('claimsProviderAppName'))]"
+      ],
+      "properties": {
+        "siteName": "[variables('claimsProviderAppName')]",
+        "hostNameType": "Verified"
+      }
+    }
+  ],
+  "outputs": {
+    "cosmosdbDev": {
+      "value": {
+        "resourceId": "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdbAccountName'))]",
+        "properties": "[reference(variables('cosmosdbAccountName'))]",
+        "keys": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdbAccountName')), variables('cosmosdbApiVersion'))]",
+        "readLocationCount": 1
+      },
+      "type": "object"
+    },
+    "functionsAppDev": {
+      "value": {
+        "resourceId": "[resourceId('Microsoft.Web/sites', variables('functionsAppName'))]",
+        "properties": "[reference(resourceId('Microsoft.Web/sites', variables('functionsAppName')))]"
+      },
+      "type": "object"
+    },
+    "testMultipleFunctionsAppDev": {
+      "value": {
+        "resourceId": "[resourceId('Microsoft.Web/sites', variables('testMultipleFunctionsAppName'))]",
+        "properties": "[reference(resourceId('Microsoft.Web/sites', variables('testMultipleFunctionsAppName')))]"
+      },
+      "type": "object"
+    },
+    "claimsproviderfunctionsAppDev": {
+      "value": {
+        "resourceId": "[resourceId('Microsoft.Web/sites', variables('claimsProviderAppName'))]",
+        "properties": "[reference(resourceId('Microsoft.Web/sites', variables('claimsProviderAppName')))]"
+      },
+      "type": "object"
+    },
+    "analyticsStorage": {
+      "value": {
+        "resourceId": "[resourceId('Microsoft.Storage/storageAccounts', variables('analyticsStorageAccountName'))]",
+        "properties": "[reference(variables('analyticsStorageAccountName'))]",
+        "keys": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('analyticsStorageAccountName')), variables('storageApiVersion'))]"
+      },
+      "type": "object"
+    }
+  }
+}

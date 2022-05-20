@@ -1,14 +1,13 @@
 ﻿// ---------------------------------------------------------------------------------
 // <copyright company="Microsoft">
-//   Copyright (c) {Microsoft} Corporation. All rights reserved.
+//   Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // ---------------------------------------------------------------------------------
 
 namespace SampleClaimsProvider
 {
-    public static class Constants
+    public static class Headers
     {
-        public const string DatabaseName = "ClaimsDB";
-        public const string CollectionName = "VehicleUserClaims";
+        public const string AuthToken = "AuthToken"; // Renamed to additional-auth-info, kept for legacy support of the 2021-05-19 claims provider API
     }
 }
