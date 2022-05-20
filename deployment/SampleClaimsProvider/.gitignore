@@ -1,0 +1,7 @@
+*.user
+*.obj
+*.dll
+*.exe
+
+bin/
+obj/
