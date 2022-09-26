@@ -3,7 +3,7 @@
 ## Introduction
 The File Upload Module is a sample pattern through which vehicles can send files directly to cloud storage. Also known as "FatPipe," this sample pattern lets vehicles send files that are too large for MQTT payloads. 
 
-This sample is comprised of edge components (the majority of files, found in the root directory), and cloud components in the [cloudExtensions](./cloudExtensions/) directory. These cloud components are extensions that are to be called by an MCVP resource.
+This sample is comprised of edge components (the majority of files, found in this directory), and cloud components in the [devex samples](../../tools/devex/samples/) directory. These cloud components are extensions that are to be called by an MCVP resource.
 
 ## Prerequisites
 1. VAS (Vehicle Abstraction Service) must be compiled and ready to run.
@@ -96,7 +96,7 @@ export AUTOEDGE_TELEMETRY_MODULE_ARBITRARY_TOPIC_ROUTES="[ { \"Source\": \"arbit
 
 ## Test
 
-MCVP Cloud Platform and Analytics support blob upload request from vehicle module by extensions. The sample extensions are available in the /cloudExtensions directory. To run end-to-end file upload, Platform must install Analytics extension to plug Azure Storage Analytics storage into platform service.
+MCVP Cloud Platform and Analytics support blob upload request from vehicle module by extensions. The sample extensions are available in the [devex samples](../../tools/devex/samples/) directory. To run end-to-end file upload, Platform must install Analytics extension to plug Azure Storage Analytics storage into platform service.
 
 To run the test locally instead of deploying the entire MCVP cloud service, we can send and receive messages with CURL and VAS for File Upload Module. The instructions below introduce how to send messages step by step.
 
