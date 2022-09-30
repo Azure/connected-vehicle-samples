@@ -75,6 +75,17 @@
                 "description": "Claims provider uri which is used for platformAccount deployment."
             }
         },
+        "claimsProviderApiVersion": {
+            "type": "string",
+            "allowedValues": [
+                "2021-05-19",
+                "2022-01-30-preview"
+            ],
+            "defaultValue": "2021-05-19",
+            "metadata": {
+                "description": "Claims provider API version which is used for platformAccount deployment."
+            }
+        },
         "logAnalyticsWorkspaceName": {
             "type": "string",
             "defaultValue": "[concat(uniqueString(resourceGroup().id), 'mcvplogs')]",
@@ -247,6 +258,9 @@
                     "claimsProviderUri": {
                         "value": "[parameters('claimsProviderUri')]"
                     },
+                    "claimsProviderApiVersion": {
+                        "value": "[parameters('claimsProviderApiVersion')]"
+                    },
                     "extensionsResourceId": {
                         "value": "[reference('McvpExtensions').outputs.mcvpextAFId.value]"
                     },
@@ -280,6 +294,9 @@
                             "type": "string"
                         },
                         "claimsProviderUri": {
+                            "type": "string"
+                        },
+                        "claimsProviderApiVersion": {
                             "type": "string"
                         },
                         "analyticsStorageAccountName": {
@@ -342,7 +359,8 @@
                                     }
                                 ],
                                 "claimsProvider": {
-                                    "baseUrl": "[parameters('claimsProviderUri')]"
+                                    "baseUrl": "[parameters('claimsProviderUri')]",
+                                    "apiVersion": "[parameters('claimsProviderApiVersion')]"
                                 }
                             },
                             "identity": {
