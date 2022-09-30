@@ -59,6 +59,11 @@
         },
         "claimsProviderUri": {
             "type": "string",
+            "allowedValues": [
+                "2021-05-19",
+                "2022-01-30-preview"
+            ],
+            "defaultValue": "2021-05-19",
             "metadata": {
                 "description": "Claims provider uri which is used for platformAccount deployment."
             }
