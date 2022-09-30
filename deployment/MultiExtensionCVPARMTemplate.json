@@ -62,6 +62,12 @@
             "metadata": {
                 "description": "Claims provider uri which is used for platformAccount deployment."
             }
+        },
+        "claimsProviderApiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "Claims provider API version which is used for platformAccount deployment."
+            }
         }
     },
     "resources": [
@@ -94,6 +100,9 @@
                     },
                     "claimsProviderUri": {
                         "value": "[parameters('claimsProviderUri')]"
+                    },
+                    "claimsProviderApiVersion": {
+                        "value": "[parameters('claimsProviderApiVersion')]"
                     },
                     "extensionsResourceIds": {
                         "value": "[parameters('extensionResourceIds')]"
@@ -128,6 +137,9 @@
                             "type": "array"
                         },
                         "claimsProviderUri": {
+                            "type": "string"
+                        },
+                        "claimsProviderApiVersion": {
                             "type": "string"
                         },
                         "analyticsStorageAccountName": {
@@ -194,7 +206,8 @@
                                     }
                                 ],
                                 "claimsProvider": {
-                                    "baseUrl": "[parameters('claimsProviderUri')]"
+                                    "baseUrl": "[parameters('claimsProviderUri')]",
+                                    "apiVersion": "[parameters('claimsProviderApiVersion')]"
                                 }
                             },
                             "identity": {
