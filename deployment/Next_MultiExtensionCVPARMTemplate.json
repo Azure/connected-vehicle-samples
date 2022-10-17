@@ -6,7 +6,7 @@
             "type": "string",
             "defaultValue": "[resourceGroup().location]",
             "metadata": {
-                "description": "location for all resources."
+                "description": "Location for all resources."
             }
         },
         "platformAccountName": {
@@ -20,10 +20,9 @@
             "type": "string",
             "defaultValue": "D0"
         },
-        "functionAppResourceGroup": {
-            "type": "string" , 
-            "metadata": {
-                "description": "Name of Resource Group where extention applications are deployed"  }        
+        "connectedVehicleApiVersion": {
+            "type": "string",
+            "defaultValue": "2020-12-01-preview"
         },
         "connectedVehicleStorageAccountType": {
             "type": "string",
@@ -37,12 +36,6 @@
                 "description": "Storage Account type"
             }
         },
-
-        "connectedVehicleApiVersion": {
-            "type": "string",
-            "defaultValue": "2020-12-01-preview"
-        },
-
         "extensionResourceIds": {
             "type": "array",
             "defaultValue": [],
@@ -66,8 +59,19 @@
         },
         "claimsProviderUri": {
             "type": "string",
+            "allowedValues": [
+                "2021-05-19",
+                "2022-01-30-preview"
+            ],
+            "defaultValue": "2021-05-19",
             "metadata": {
                 "description": "Claims provider uri which is used for platformAccount deployment."
+            }
+        },
+        "claimsProviderApiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "Claims provider API version which is used for platformAccount deployment."
             }
         }
     },
@@ -102,6 +106,9 @@
                     "claimsProviderUri": {
                         "value": "[parameters('claimsProviderUri')]"
                     },
+                    "claimsProviderApiVersion": {
+                        "value": "[parameters('claimsProviderApiVersion')]"
+                    },
                     "extensionsResourceIds": {
                         "value": "[parameters('extensionResourceIds')]"
                     },
@@ -135,6 +142,9 @@
                             "type": "array"
                         },
                         "claimsProviderUri": {
+                            "type": "string"
+                        },
+                        "claimsProviderApiVersion": {
                             "type": "string"
                         },
                         "analyticsStorageAccountName": {
@@ -201,7 +211,8 @@
                                     }
                                 ],
                                 "claimsProvider": {
-                                    "baseUrl": "[parameters('claimsProviderUri')]"
+                                    "baseUrl": "[parameters('claimsProviderUri')]",
+                                    "apiVersion": "[parameters('claimsProviderApiVersion')]"
                                 }
                             },
                             "identity": {
@@ -225,7 +236,6 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-10-01",
             "name": "RoleAssignments",
-            "resourceGroup": "[parameters('functionAppResourceGroup')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'Mcvp')]"
             ],
