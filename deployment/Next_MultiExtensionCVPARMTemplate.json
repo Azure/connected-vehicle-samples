@@ -9,6 +9,11 @@
                 "description": "Location for all resources."
             }
         },
+        "functionAppResourceGroup": {
+            "type": "string" , 
+            "metadata": {
+                "description": "Name of Resource Group where extention applications are deployed"  }        
+        },
         "platformAccountName": {
             "type": "string",
             "defaultValue": "[concat('mcvp', uniqueString(resourceGroup().id))]",
@@ -236,6 +241,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-10-01",
             "name": "RoleAssignments",
+            "resourceGroup": "[parameters('functionAppResourceGroup')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'Mcvp')]"
             ],
