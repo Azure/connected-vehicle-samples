@@ -62,7 +62,7 @@
                 "description": "Specifies whether the platform account should access the analytics storage account through a private endpoint connection."
             }
         },
-        "claimsProviderUri": {
+        "claimsProviderApiVersion": {
             "type": "string",
             "allowedValues": [
                 "2021-05-19",
@@ -70,13 +70,13 @@
             ],
             "defaultValue": "2021-05-19",
             "metadata": {
-                "description": "Claims provider uri which is used for platformAccount deployment."
+                "description": "Claims provider API version CVP must use when using the Claims APIs."
             }
         },
-        "claimsProviderApiVersion": {
+        "claimsProviderUri": {
             "type": "string",
             "metadata": {
-                "description": "Claims provider API version which is used for platformAccount deployment."
+                "description": "Claims provider URI CVP must use to connect to the Claims Provider."
             }
         }
     },
