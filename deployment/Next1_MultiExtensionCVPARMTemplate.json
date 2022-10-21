@@ -14,7 +14,6 @@
             "metadata": {
                 "description": "Name of Resource Group where extention applications are deployed"  }        
         },
-        
         "platformAccountName": {
             "type": "string",
             "defaultValue": "[concat('mcvp', uniqueString(resourceGroup().id))]",
@@ -55,6 +54,9 @@
             "metadata": {
                 "description": "The name of the analytics storage account."
             }
+        },
+        "analyticsStorageAccountResourceGroup": {
+            "type": "string"
         },
         "enablePrivateEndpointConnectionToAnalytics": {
             "type": "bool",
@@ -258,9 +260,6 @@
                     "extensionResourceIds": {
                         "value": "[parameters('extensionResourceIds')]"
                     },
-                    "analyticsStorageAccountName": {
-                        "value": "[parameters('analyticsStorageAccountName')]"
-                    },
                     "mcvpPrincipalId": {
                         "value": "[reference('Mcvp').outputs.mcvpPrincipalId.value]"
                     }
@@ -275,9 +274,7 @@
                         "extensionResourceIds": {
                             "type": "array"
                         },
-                        "analyticsStorageAccountName": {
-                            "type": "string"
-                        },
+                        
                         "mcvpPrincipalId": {
                             "type": "string"
                         }
@@ -301,6 +298,54 @@
                                 "count": "[length(parameters('extensionResourceIds'))]"
                             }
                         },
+                        
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "name": "RoleAssignments",
+            "resourceGroup": "[parameters('analyticsStorageAccountResourceGroup')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'Mcvp')]"
+            ],
+            "properties": {
+                "expressionEvaluationOptions": {
+                    "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                    "platformAccountName": {
+                        "value": "[parameters('platformAccountName')]"
+                    },
+                    "analyticsStorageAccountName": {
+                        "value": "[parameters('analyticsStorageAccountName')]"
+                    },
+                    "mcvpPrincipalId": {
+                        "value": "[reference('Mcvp').outputs.mcvpPrincipalId.value]"
+                    }
+                },
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "platformAccountName": {
+                            "type": "string"
+                        },
+                        "analyticsStorageAccountName": {
+                            "type": "string"
+                        },
+                        "mcvpPrincipalId": {
+                            "type": "string"
+                        }
+                    },
+                    "variables": {
+                        "contributorRoleId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+                        "storageBlobDataOwnerRoleId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/b7e6dc6d-f1e8-4753-8033-0f276bb0955b')]"
+                    },
+                    "resources": [
                         {
                             "type": "Microsoft.Authorization/roleAssignments",
                             "apiVersion": "2020-04-01-preview",
