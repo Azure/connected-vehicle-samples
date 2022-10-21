@@ -297,8 +297,7 @@
                                 "name": "roleAssignmentCopy",
                                 "count": "[length(parameters('extensionResourceIds'))]"
                             }
-                        },
-                        
+                        } 
                     ]
                 }
             }
