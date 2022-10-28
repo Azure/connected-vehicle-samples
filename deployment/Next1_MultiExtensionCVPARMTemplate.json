@@ -10,9 +10,10 @@
             }
         },
         "functionAppResourceGroup": {
-            "type": "string" , 
+            "type": "string",
             "metadata": {
-                "description": "Name of Resource Group where extention applications are deployed"  }        
+                "description": "Name of Resource Group where extention applications are deployed"
+            }
         },
         "platformAccountName": {
             "type": "string",
@@ -55,9 +56,6 @@
                 "description": "The name of the analytics storage account."
             }
         },
-        "analyticsStorageAccountResourceGroup": {
-            "type": "string"
-        },
         "enablePrivateEndpointConnectionToAnalytics": {
             "type": "bool",
             "defaultValue": false,
@@ -71,7 +69,7 @@
                 "2021-05-19",
                 "2022-01-30-preview"
             ],
-            "defaultValue": "2021-05-19",
+            "defaultValue": "2022-01-30-preview",
             "metadata": {
                 "description": "Claims provider API version CVP must use when using the Claims APIs."
             }
@@ -85,160 +83,71 @@
     },
     "resources": [
         {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2020-10-01",
-            "name": "Mcvp",
-            "dependsOn": [
-            ],
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "name": "[parameters('analyticsStorageAccountName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('connectedVehicleStorageAccountType')]"
+            },
+            "kind": "StorageV2",
             "properties": {
-                "expressionEvaluationOptions": {
-                    "scope": "inner"
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "enabled": true
+                        },
+                        "blob": {
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
                 },
-                "mode": "Incremental",
-                "parameters": {
-                    "Name": {
-                        "value": "[parameters('platformAccountName')]"
-                    },
-                    "StorageAccountType": {
-                        "value": "[parameters('connectedVehicleStorageAccountType')]"
-                    },
-                    "location": {
-                        "value": "[parameters('location')]"
-                    },
-                    "platformAccountAPIVersion": {
-                        "value": "[parameters('connectedVehicleApiVersion')]"
-                    },
-                    "sku": {
-                        "value": "[parameters('platformAccountSku')]"
-                    },
-                    "claimsProviderUri": {
-                        "value": "[parameters('claimsProviderUri')]"
-                    },
-                    "claimsProviderApiVersion": {
-                        "value": "[parameters('claimsProviderApiVersion')]"
-                    },
-                    "extensionsResourceIds": {
-                        "value": "[parameters('extensionResourceIds')]"
-                    },
-                    "analyticsStorageAccountName": {
-                        "value": "[parameters('analyticsStorageAccountName')]"
-                    },
-                    "enablePrivateEndpointConnectionToAnalytics": {
-                        "value": "[parameters('enablePrivateEndpointConnectionToAnalytics')]"
-                    }
-                },
-                "template": {
-                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {
-                        "Name": {
-                            "type": "string"
-                        },
-                        "StorageAccountType": {
-                            "type": "string"
-                        },
-                        "location": {
-                            "type": "string"
-                        },
-                        "platformAccountAPIVersion": {
-                            "type": "string"
-                        },
-                        "sku": {
-                            "type": "string"
-                        },
-                        "extensionsResourceIds": {
-                            "type": "array"
-                        },
-                        "claimsProviderUri": {
-                            "type": "string"
-                        },
-                        "claimsProviderApiVersion": {
-                            "type": "string"
-                        },
-                        "analyticsStorageAccountName": {
-                            "type": "string"
-                        },
-                        "enablePrivateEndpointConnectionToAnalytics": {
-                            "type": "bool"
-                        }
-                    },
-                    "resources": [
-                        {
-                            "type": "Microsoft.Storage/storageAccounts",
-                            "apiVersion": "2019-06-01",
-                            "name": "[parameters('analyticsStorageAccountName')]",
-                            "location": "[parameters('location')]",
-                            "sku": {
-                                "name": "[parameters('StorageAccountType')]"
-                            },
-                            "kind": "StorageV2",
-                            "properties": {
-                                "supportsHttpsTrafficOnly": true,
-                                "encryption": {
-                                    "services": {
-                                        "file": { 
-                                            "enabled": true
-                                        },
-                                        "blob": {
-                                            "enabled": true
-                                        }
-                                    },
-                                    "keySource": "Microsoft.Storage"
-                                },
-                                "isHnsEnabled": true,
-                                "accessTier": "Hot",
-                                "networkAcls": {
-                                    "bypass": "None",
-                                    "defaultAction": "[if(parameters('enablePrivateEndpointConnectionToAnalytics'),'Deny','Allow')]",
-                                    "ipRules": [],
-                                    "resourceAccessRules": [],
-                                    "virtualNetworkRules": []
-                                }
-                            }
-                        },
-                        {
-                            "apiVersion": "[parameters('platformAccountAPIVersion')]",
-                            "type": "Microsoft.ConnectedVehicle/platformAccounts",
-                            "name": "[parameters('Name')]",
-                            "location": "[parameters('location')]",
-                            "sku": {
-                                "name": "[parameters('sku')]"
-                            },
-                            "properties": {
-                                "analytics": {
-                                    "storageAccountResourceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('analyticsStorageAccountName'))]",
-                                    "enablePrivateEndpointConnection": "[parameters('enablePrivateEndpointConnectionToAnalytics')]"
-                                },
-                                "copy": [
-                                    {
-                                        "name": "extensions",
-                                        "count": "[length(parameters('extensionsResourceIds'))]",
-                                        "input": {
-                                            "resourceId": "[parameters('extensionsResourceIds')[copyIndex('extensions')]]"
-                                        }
-                                    }
-                                ],
-                                "claimsProvider": {
-                                    "baseUrl": "[parameters('claimsProviderUri')]",
-                                    "apiVersion": "[parameters('claimsProviderApiVersion')]"
-                                }
-                            },
-                            "identity": {
-                                "type": "SystemAssigned"
-                            },
-                            "dependsOn": [
-                                "[resourceId('Microsoft.Storage/storageAccounts', parameters('analyticsStorageAccountName'))]"
-                            ]
-                        }
-                    ],
-                    "outputs": {
-                        "mcvpPrincipalId": {
-                            "type": "string",
-                            "value": "[reference(concat('Microsoft.ConnectedVehicle/platformAccounts/', parameters('Name')), parameters('platformAccountAPIVersion'), 'Full').identity.principalId]"
-                        }
-                    }
+                "isHnsEnabled": true,
+                "accessTier": "Hot",
+                "networkAcls": {
+                    "bypass": "None",
+                    "defaultAction": "[if(parameters('enablePrivateEndpointConnectionToAnalytics'),'Deny','Allow')]",
+                    "ipRules": [],
+                    "resourceAccessRules": [],
+                    "virtualNetworkRules": []
                 }
             }
+        },
+        {
+            "apiVersion": "[parameters('connectedVehicleApiVersion')]",
+            "type": "Microsoft.ConnectedVehicle/platformAccounts",
+            "name": "[parameters('platformAccountName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('platformAccountSku')]"
+            },
+            "properties": {
+                "analytics": {
+                    "storageAccountResourceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('analyticsStorageAccountName'))]",
+                    "enablePrivateEndpointConnection": "[parameters('enablePrivateEndpointConnectionToAnalytics')]"
+                },
+                "copy": [
+                    {
+                        "name": "extensions",
+                        "count": "[length(parameters('extensionResourceIds'))]",
+                        "input": {
+                            "resourceId": "[parameters('extensionResourceIds')[copyIndex('extensions')]]"
+                        }
+                    }
+                ],
+                "claimsProvider": {
+                    "baseUrl": "[parameters('claimsProviderUri')]",
+                    "apiVersion": "[parameters('claimsProviderApiVersion')]"
+                }
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('analyticsStorageAccountName'))]"
+            ]
         },
         {
             "type": "Microsoft.Resources/deployments",
@@ -246,7 +155,7 @@
             "name": "RoleAssignments",
             "resourceGroup": "[parameters('functionAppResourceGroup')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'Mcvp')]"
+                "[resourceId('Microsoft.ConnectedVehicle/platformAccounts', parameters('platformAccountName'))]"
             ],
             "properties": {
                 "expressionEvaluationOptions": {
@@ -261,7 +170,7 @@
                         "value": "[parameters('extensionResourceIds')]"
                     },
                     "mcvpPrincipalId": {
-                        "value": "[reference('Mcvp').outputs.mcvpPrincipalId.value]"
+                        "value": "[reference(concat('Microsoft.ConnectedVehicle/platformAccounts/', parameters('Name')), parameters('connectedVehicleApiVersion'), 'Full').identity.principalId]"
                     }
                 },
                 "template": {
@@ -274,7 +183,7 @@
                         "extensionResourceIds": {
                             "type": "array"
                         },
-                        
+
                         "mcvpPrincipalId": {
                             "type": "string"
                         }
@@ -297,7 +206,7 @@
                                 "name": "roleAssignmentCopy",
                                 "count": "[length(parameters('extensionResourceIds'))]"
                             }
-                        } 
+                        }
                     ]
                 }
             }
@@ -305,10 +214,9 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-10-01",
-            "name": "RoleAssignments",
-            "resourceGroup": "[parameters('analyticsStorageAccountResourceGroup')]",
+            "name": "storageAccountRoleAssignments",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'Mcvp')]"
+                "[resourceId('Microsoft.ConnectedVehicle/platformAccounts', parameters('platformAccountName'))]"
             ],
             "properties": {
                 "expressionEvaluationOptions": {
@@ -323,7 +231,7 @@
                         "value": "[parameters('analyticsStorageAccountName')]"
                     },
                     "mcvpPrincipalId": {
-                        "value": "[reference('Mcvp').outputs.mcvpPrincipalId.value]"
+                        "value": "[reference(concat('Microsoft.ConnectedVehicle/platformAccounts/', parameters('Name')), parameters('connectedVehicleApiVersion'), 'Full').identity.principalId]"
                     }
                 },
                 "template": {
