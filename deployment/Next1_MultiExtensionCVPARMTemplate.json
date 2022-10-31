@@ -231,7 +231,7 @@
                         "value": "[parameters('analyticsStorageAccountName')]"
                     },
                     "mcvpPrincipalId": {
-                        "value": "[reference(concat('Microsoft.ConnectedVehicle/platformAccounts/', parameters('Name')), parameters('connectedVehicleApiVersion'), 'Full').identity.principalId]"
+                        "value": "[reference(concat('Microsoft.ConnectedVehicle/platformAccounts/', parameters('platformAccountName')), parameters('connectedVehicleApiVersion'), 'Full').identity.principalId]"
                     }
                 },
                 "template": {
