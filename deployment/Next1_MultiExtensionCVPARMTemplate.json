@@ -6,13 +6,13 @@
             "type": "string",
             "defaultValue": "[resourceGroup().location]",
             "metadata": {
-                "description": "Location for all resources"
+                "description": "Location for all resources."
             }
         },
         "functionAppResourceGroup": {
             "type": "string",
             "metadata": {
-                "description": "Name of Resource Group where extention applications are deployed"
+                "description": "Name of Resource Group where extention applications are deployed."
             }
         },
         "platformAccountName": {
@@ -20,6 +20,13 @@
             "defaultValue": "[concat('mcvp', uniqueString(resourceGroup().id))]",
             "metadata": {
                 "description": "The name of the Connected Vehicle Platform account resource."
+            }
+        },
+        "analyticsStorageAccountName": {
+            "type": "string",
+            "defaultValue": "[concat('analytics', uniquestring(resourceGroup().id))]",
+            "metadata": {
+                "description": "The name of the analytics storage account."
             }
         },
         "platformAccountSku": {
@@ -47,13 +54,6 @@
             "defaultValue": [],
             "metadata": {
                 "description": "An array of resource ids pointing to existing azure function apps hosting CVP extensions."
-            }
-        },
-        "analyticsStorageAccountName": {
-            "type": "string",
-            "defaultValue": "[concat(uniquestring(resourceGroup().id), 'analytics')]",
-            "metadata": {
-                "description": "The name of the analytics storage account."
             }
         },
         "enablePrivateEndpointConnectionToAnalytics": {
