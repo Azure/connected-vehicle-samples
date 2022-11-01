@@ -196,7 +196,7 @@
                         {
                             "type": "Microsoft.Authorization/roleAssignments",
                             "apiVersion": "2020-04-01-preview",
-                            "name": "[guid(concat(parameters('platformAccountName'), parameters('extensionResourceIds')[copyIndex()], 'contributorRole'))]",
+                            "name": "[guid(concat(parameters('mcvpPrincipalId'), parameters('extensionResourceIds')[copyIndex()], 'contributorRole'))]",
                             "scope": "[parameters('extensionResourceIds')[copyIndex()]]",
                             "properties": {
                                 "roleDefinitionId": "[variables('contributorRoleId')]",
@@ -256,7 +256,7 @@
                         {
                             "type": "Microsoft.Authorization/roleAssignments",
                             "apiVersion": "2020-04-01-preview",
-                            "name": "[guid(concat(parameters('platformAccountName'), parameters('analyticsStorageAccountName'), 'contributorRole'))]",
+                            "name": "[guid(concat(parameters('mcvpPrincipalId'), parameters('analyticsStorageAccountName'), 'contributorRole'))]",
                             "scope": "[concat('Microsoft.Storage/storageAccounts/', parameters('analyticsStorageAccountName') )]",
                             "properties": {
                                 "roleDefinitionId": "[variables('contributorRoleId')]",
@@ -266,7 +266,7 @@
                         {
                             "type": "Microsoft.Authorization/roleAssignments",
                             "apiVersion": "2020-04-01-preview",
-                            "name": "[guid(concat(parameters('platformAccountName'), parameters('analyticsStorageAccountName'), 'storageBlobDataOwnerRole'))]",
+                            "name": "[guid(concat(parameters('mcvpPrincipalId'), parameters('analyticsStorageAccountName'), 'storageBlobDataOwnerRole'))]",
                             "scope": "[concat('Microsoft.Storage/storageAccounts/', parameters('analyticsStorageAccountName') )]",
                             "properties": {
                                 "roleDefinitionId": "[variables('storageBlobDataOwnerRoleId')]",
